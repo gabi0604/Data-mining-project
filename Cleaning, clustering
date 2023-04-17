@@ -1,0 +1,147 @@
+---
+title: "prac"
+author: "Abigna"
+date: '2022-04-05'
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+```{r}
+data<-IMB403_XLS_ENG
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+set.seed(7)
+predicted<-ifelse(imb$POINTS_H>35,1,0)
+# actual labels
+predicted = actual
+# predicted labels
+# introduce incorrect predictions
+ cm = as.matrix(table(Actual = train$POINTS_H, Predicted = predicted)) 
+ cm
+```
+
+
+```{r}
+ n = sum(cm) # number of instances
+ nc = nrow(cm) # number of classes
+ diag = diag(cm) # number of correctly classified instances per class 
+ rowsums = apply(cm, 1, sum) # number of instances per class
+ colsums = apply(cm, 2, sum) # number of predictions per class
+ p = rowsums / n # distribution of instances over the actual classes
+ q = colsums / n 
+ accuracy = sum(diag) / n
+ accuracy # distribution of instances over the predicted classes
+```
+```{r}
+precision = diag / colsums 
+ recall = diag / rowsums 
+ f1 = 2 * precision * recall / (precision + recall) 
+```
+
+```{r}
+data.frame(precision, recall, f1) 
+```
+
+```{r}
+macroPrecision = mean(precision)
+  macroRecall = mean(recall)
+  macroF1 = mean(f1)
+```
+
+```{r}
+data.frame(macroPrecision, macroRecall, macroF1)
+```
+```{r}
+oneVsAll = lapply(1 : nc,
+                      function(i){
+                        v = c(cm[i,i],
+                              rowsums[i] - cm[i,i],
+                              colsums[i] - cm[i,i],
+                              n-rowsums[i] - colsums[i] + cm[i,i]);
+                        return(matrix(v, nrow = 2, byrow = T))})
+```
+
+```{r}
+ s = matrix(0, nrow = 2, ncol = 2)
+ for(i in 1 : nc){s = s + oneVsAll[[i]]}
+ s
+```
+```{r}
+avgAccuracy = sum(diag(s)) / sum(s)
+ avgAccuracy
+```
+
+
+```{r}
+ micro_prf = (diag(s) / apply(s,1, sum))[1];
+```
+
+
+```{r}
+imb <- IMB403_XLS_ENG
+colnames(imb)[4]<-"RED_H"
+colnames(imb)[5]<-"RED_A"
+str(imb)
+```
+
+
+```{r}
+library(caret)
+library(e1071)
+library(rpart)
+library(rpart.plot)
+library(class)
+library(ROCR)
+library(pROC)
+library(randomForest)
+library(nnet)
+library(reshape2)
+library(ggplot2)
+imb <- imb[,-1]
+Match_O <- factor(imb$Match_O, levels = c(0,1,2), labels = c("Lose","Draw","Win"))
+```
+
+```{r}
+set.seed(1)
+trainIndex<-createDataPartition(imb$Match_O, p=.7, list=FALSE)
+Train<-imb[trainIndex,-7]
+Test<-imb[-trainIndex,7]
+```
+
+```{r}
+model_dt1<-rpart(Match_O~., data=Train)
+prp(model_dt1, type=1, extra=1)
+pred_class<-predict(model_dt1, Test, type="class")
+confusionMatrix(pred_class, Test$Match_O)
+pr1<-predict(model_dt1, Test)
+P_test<-prediction(pr1[,2], Test$Match_O)
+perf<-performance(P_test,"tpr","fpr")
+plot(perf)
+performance(P_test,"auc")@y.values
+```
+```{(er}
+library(e1071)
+```
+
